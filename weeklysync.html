@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Weekly Data & Imports Sync</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#0f1a2e;
+      --text:#eaf0ff;
+      --muted: rgba(234,240,255,.72);
+      --line: rgba(234,240,255,.12);
+
+      /* “bswift-ish” accent: warm orange + crisp blue vibe */
+      --accent:#ff5a2a;
+      --accent2:#2fb2ff;
+
+      --ok:#35d07f;
+      --warn:#ffcc66;
+      --risk:#ff5a2a;
+
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+      --radius: 18px;
+      --radius2: 14px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:
+        radial-gradient(900px 500px at 10% -10%, rgba(47,178,255,.18), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(255,90,42,.20), transparent 55%),
+        linear-gradient(180deg, #071022, var(--bg));
+      color:var(--text);
+    }
+
+    .wrap{max-width:1080px;margin:34px auto;padding:0 18px 42px}
+    .hero{
+      position:relative;
+      padding:28px 26px;
+      border-radius:var(--radius);
+      background: linear-gradient(180deg, rgba(255,90,42,.16), rgba(255,90,42,.06));
+      border:1px solid rgba(255,90,42,.28);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .hero:after{
+      content:"";
+      position:absolute; inset:-120px -160px auto auto;
+      width:320px; height:320px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,90,42,.90), rgba(255,90,42,.10) 70%, transparent 72%);
+      transform: rotate(12deg);
+      border-radius:50%;
+      opacity:.9;
+    }
+    .hero-top{
+      display:flex; gap:14px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
+      position:relative; z-index:1;
+    }
+    .title{
+      margin:0;
+      font-size:28px;
+      letter-spacing:.4px;
+      font-weight:800;
+      line-height:1.15;
+    }
+    .subtitle{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      letter-spacing:.2px;
+    }
+    .meta{
+      display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;
+      margin-top:2px;
+    }
+    .pill{
+      border:1px solid rgba(234,240,255,.16);
+      background: rgba(15,26,46,.55);
+      backdrop-filter: blur(8px);
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .pill b{color:var(--text)}
+    .grid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:14px;
+      margin-top:16px;
+      position:relative; z-index:1;
+    }
+    @media (max-width: 920px){
+      .grid{grid-template-columns:1fr}
+      .meta{justify-content:flex-start}
+    }
+
+    .card{
+      border-radius:var(--radius);
+      background: rgba(15,26,46,.78);
+      border:1px solid rgba(234,240,255,.10);
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+    .card-h{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(90deg, rgba(47,178,255,.12), transparent 55%);
+    }
+    .card-h h2{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.7px;
+      text-transform:uppercase;
+      font-weight:800;
+    }
+    .tag{
+      font-size:12px;
+      color:rgba(234,240,255,.85);
+      border:1px solid rgba(234,240,255,.14);
+      border-radius:999px;
+      padding:6px 10px;
+      background: rgba(7,16,34,.45);
+    }
+    .card-b{padding:14px 16px}
+
+    .kv{display:grid;grid-template-columns:150px 1fr;gap:8px 12px}
+    .k{color:var(--muted);font-size:12px}
+    .v{font-size:13px}
+
+    .list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+    .item{
+      border:1px solid rgba(234,240,255,.10);
+      border-radius:var(--radius2);
+      padding:12px 12px;
+      background: rgba(7,16,34,.45);
+    }
+    .item-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .item-title{margin:0;font-weight:800;font-size:14px}
+    .item-sub{margin:6px 0 0;color:var(--muted);font-size:12.5px;line-height:1.35}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(234,240,255,.14);
+      background: rgba(15,26,46,.55);
+      color:rgba(234,240,255,.9);
+      display:inline-flex; align-items:center; gap:6px;
+    }
+    .dot{width:8px;height:8px;border-radius:50%}
+    .ok{background:var(--ok)}
+    .warn{background:var(--warn)}
+    .risk{background:var(--risk)}
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius:var(--radius2);
+      border:1px solid rgba(234,240,255,.10);
+      background: rgba(7,16,34,.45);
+    }
+    th, td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(234,240,255,.08);
+      font-size:12.5px;
+      vertical-align:top;
+    }
+    th{
+      text-transform:uppercase;
+      letter-spacing:.6px;
+      font-size:11px;
+      color:rgba(234,240,255,.78);
+      background: rgba(15,26,46,.6);
+    }
+    tr:last-child td{border-bottom:none}
+    .small{font-size:12px;color:var(--muted)}
+    .foot{
+      margin-top:16px;
+      color:rgba(234,240,255,.62);
+      font-size:12px;
+      text-align:center;
+    }
+    .hr{
+      height:1px;
+      background: rgba(234,240,255,.10);
+      margin:14px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-top">
+        <div>
+          <h1 class="title">Weekly Data &amp; Imports Sync</h1>
+          <p class="subtitle">Clear priorities • Smart risk management • No surprises</p>
+        </div>
+        <div class="meta">
+          <div class="pill"><b>Date:</b> <!-- TODO --> Jan 6, 2026</div>
+          <div class="pill"><b>Facilitator:</b> <!-- TODO --> Timo</div>
+          <div class="pill"><b>Timebox:</b> <!-- TODO --> 45 min</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT COLUMN -->
+      <div class="card">
+        <div class="card-h">
+          <h2>📊 Data Items</h2>
+          <span class="tag">This week’s headlines</span>
+        </div>
+        <div class="card-b">
+          <ul class="list">
+            <li class="item">
+              <div class="item-top">
+                <p class="item-title">Item title goes here</p>
+                <div class="chips">
+                  <span class="chip"><span class="dot warn"></span> Attention</span>
+                  <span class="chip">Owner: <b>Rafa</b></span>
+                </div>
+              </div>
+              <p class="item-sub">Quick summary. What changed, why it matters, what we need from the team.</p>
+            </li>
+
+            <li class="item">
+              <div class="item-top">
+                <p class="item-title">Second item title</p>
+                <div class="chips">
+                  <span class="chip"><span class="dot ok"></span> On track</span>
+                  <span class="chip">Owner: <b>Kevin</b></span>
+                </div>
+              </div>
+              <p class="item-sub">Short, punchy summary. Keep it scannable.</p>
+            </li>
+          </ul>
+
+          <div class="hr"></div>
+
+          <div class="small">
+            Tip: keep these to “impact statements” (workload, timeline, quality, risk).
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div>
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-h">
+            <h2>👥 Attendance</h2>
+            <span class="tag">Quick roll call</span>
+          </div>
+          <div class="card-b">
+            <table>
+              <thead>
+                <tr><th>Name</th><th>Status</th><th>Notes</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Shilpa</td><td>Present</td><td></td></tr>
+                <tr><td>Prisca</td><td>Present</td><td></td></tr>
+                <tr><td>Lucky</td><td>OOO</td><td></td></tr>
+                <tr><td>Mahmoud</td><td>Present</td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h">
+            <h2>🧹 Housekeeping Items</h2>
+            <span class="tag">Reminders + cleanup</span>
+          </div>
+          <div class="card-b">
+            <ul class="list">
+              <li class="item">
+                <div class="item-top">
+                  <p class="item-title">Housekeeping item</p>
+                  <div class="chips">
+                    <span class="chip"><span class="dot ok"></span> Quick</span>
+                  </div>
+                </div>
+                <p class="item-sub">Example: Template updates, naming conventions, “please stop doing X”.</p>
+              </li>
+              <li class="item">
+                <div class="item-top">
+                  <p class="item-title">Another housekeeping item</p>
+                  <div class="chips">
+                    <span class="chip"><span class="dot warn"></span> This week</span>
+                  </div>
+                </div>
+                <p class="item-sub">Example: Deadlines, expected OOO coverage, etc.</p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- FULL WIDTH SECTIONS -->
+      <div class="card" style="grid-column: 1 / -1;">
+        <div class="card-h">
+          <h2>🆕 New Clients</h2>
+          <span class="tag">Starts + ramp</span>
+        </div>
+        <div class="card-b">
+          <table>
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Start Date</th>
+                <th>Complexity</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Client Name</td>
+                <td>MM/DD</td>
+                <td>Medium</td>
+                <td>Key risks / dependencies / owner.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="grid-column: 1 / -1;">
+        <div class="card-h" style="background: linear-gradient(90deg, rgba(255,90,42,.20), transparent 60%);">
+          <h2>⚠ Handle With Care Clients</h2>
+          <span class="tag">High-touch or sensitive</span>
+        </div>
+        <div class="card-b">
+          <table>
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Risk Area</th>
+                <th>Why this needs care</th>
+                <th>Owner</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Client Name</td>
+                <td>Data / Timeline / Stakeholders</td>
+                <td>Short explanation. What do we need to avoid surprises?</td>
+                <td>Owner Name</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="small" style="margin-top:10px;">
+            Rule: if it’s here, it has an owner and a next step.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="foot">
+      Shareable weekly snapshot • Keep it scannable • Update + send link or attach HTML
+    </p>
+  </div>
+</body>
+</html>
